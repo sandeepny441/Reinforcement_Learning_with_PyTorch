@@ -43,3 +43,5 @@ plt.show()
 
 # Print the learned parameters
 print(f"Learned parameters: w = {model.linear.weight.item():.2f}, b = {model.linear.bias.item():.2f}")
+
+print("this is a new update")
