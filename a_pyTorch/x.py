@@ -78,3 +78,12 @@ print(f"Median Spend: ${df_daily['Spend'].median():.2f}")
 print(f"Standard Deviation: ${df_daily['Spend'].std():.2f}")
 print(f"Minimum Spend: ${df_daily['Spend'].min():.2f}")
 print(f"Maximum Spend: ${df_daily['Spend'].max():.2f}")
+
+
+# Calculate and print additional metrics
+print("\nAdditional Metrics:")
+print(f"Mean Spend: ${df_daily['Spend'].mean():.2f}")
+print(f"Median Spend: ${df_daily['Spend'].median():.2f}")
+print(f"Standard Deviation: ${df_daily['Spend'].std():.2f}")
+print(f"Minimum Spend: ${df_daily['Spend'].min():.2f}")
+print(f"Maximum Spend: ${df_daily['Spend'].max():.2f}")
