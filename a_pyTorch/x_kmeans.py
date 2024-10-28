@@ -40,3 +40,17 @@ plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis')
 plt.scatter(centroids[:, 0], centroids[:, 1], c='red', marker='x', s=200, linewidths=3)
 plt.title('K-means Clustering Results')
 plt.show()
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
