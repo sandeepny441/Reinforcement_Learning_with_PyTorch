@@ -42,3 +42,25 @@ if st.button("Recommend Products"):
         st.header("Actual Products Purchased")
         for product in actual_purchases:
             st.write(product)
+
+
+
+# Show recommendations when the button is clicked
+if st.button("Recommend Products"):
+    recommendations = recommend_products(selected_category)
+
+    # Display two columns for Recommendations and Actual Purchases
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.header("Recommended Products")
+        if not recommendations.empty:
+            for index, row in recommendations.iterrows():
+                st.write(f"{row['product_name']} - Rating: {row['average_rating']}")
+        else:
+            st.write("No recommendations available for this category.")
+
+    with col2:
+        st.header("Actual Products Purchased")
+        for product in actual_purchases:
+            st.write(product)
