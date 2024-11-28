@@ -25,3 +25,9 @@ if st.button("Fetch Data"):
             st.write(f"Event: {record['event']}, Count: {record['count']}")
     else:
         st.error("Failed to fetch data from Amplitude.")
+
+import pandas as pd
+import numpy as npimport pandas as pd
+import numpy as npimport pandas as pd
+import numpy as npimport pandas as pd
+import numpy as np
