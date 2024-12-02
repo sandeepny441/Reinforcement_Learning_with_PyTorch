@@ -70,3 +70,22 @@ if st.button("Download Processed Data"):
         file_name="processed_data.csv",
         mime="text/csv"
     )
+
+
+import streamlit as st
+import pandas as pd
+
+# Title
+st.title("Interactive Dashboard with Group By and Aggregations")
+
+# Sample dataset columns
+columns = ["customer_id", "product", "price", "date", "brand"]
+
+import streamlit as st
+import pandas as pd
+
+# Title
+st.title("Interactive Dashboard with Group By and Aggregations")
+
+# Sample dataset columns
+columns = ["customer_id", "product", "price", "date", "brand"]
