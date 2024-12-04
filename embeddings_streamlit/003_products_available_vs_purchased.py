@@ -8,7 +8,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModel.from_pretrained(model_name)
 
 # Words to process
-products_available = ["milk", "cheese", "butter", "ghee", "apples", "sketches"]
+products_available = ["milk", "cheese", "butter", "ghee", "apples", "shoes"]
 products_purchased = ["butter", "wheat", "eggs", "carrot", "apples"]
 
 # Combine all unique words and assign categories
