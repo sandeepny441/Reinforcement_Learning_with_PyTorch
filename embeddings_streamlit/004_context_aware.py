@@ -73,26 +73,6 @@ data = {
     "Y": word_vectors_2d[:, 1],
 }
 
-# # Create a 2D scatter plot using Plotly
-# fig = px.scatter(
-#     x=data["X"],
-#     y=data["Y"],
-#     text=data["Word"],
-#     color=data["Category"],
-#     title="2D Embedding Visualization for Products (Contextual)",
-#     labels={"x": "Dimension 1", "y": "Dimension 2"},
-# )
-
-# fig.update_traces(textposition="top center")
-# fig.update_layout(
-#     xaxis=dict(title="Dimension 1"),
-#     yaxis=dict(title="Dimension 2"),
-#     showlegend=True,
-#     width=800,
-#     height=600,
-# )
-
-# fig.show()
 
 
 import pandas as pd
