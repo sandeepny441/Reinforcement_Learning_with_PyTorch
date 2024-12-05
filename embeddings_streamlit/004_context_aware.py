@@ -73,16 +73,63 @@ data = {
     "Y": word_vectors_2d[:, 1],
 }
 
+# # Create a 2D scatter plot using Plotly
+# fig = px.scatter(
+#     x=data["X"],
+#     y=data["Y"],
+#     text=data["Word"],
+#     color=data["Category"],
+#     title="2D Embedding Visualization for Products (Contextual)",
+#     labels={"x": "Dimension 1", "y": "Dimension 2"},
+# )
+
+# fig.update_traces(textposition="top center")
+# fig.update_layout(
+#     xaxis=dict(title="Dimension 1"),
+#     yaxis=dict(title="Dimension 2"),
+#     showlegend=True,
+#     width=800,
+#     height=600,
+# )
+
+# fig.show()
+
+
+import pandas as pd
+
+# Prepare data for visualization as a DataFrame
+data = pd.DataFrame({
+    "Word": all_products,
+    "Category": categories,
+    "X": word_vectors_2d[:, 0],
+    "Y": word_vectors_2d[:, 1],
+})
+
 # Create a 2D scatter plot using Plotly
 fig = px.scatter(
-    x=data["X"],
-    y=data["Y"],
-    text=data["Word"],
-    color=data["Category"],
+    data,
+    x="X",
+    y="Y",
+    text="Word",
+    color="Category",  # Color points by category
     title="2D Embedding Visualization for Products (Contextual)",
-    labels={"x": "Dimension 1", "y": "Dimension 2"},
+    labels={"X": "Dimension 1", "Y": "Dimension 2"},
 )
 
+# Add circles around each point
+for i, row in data.iterrows():
+    fig.add_shape(
+        type="circle",
+        xref="x",
+        yref="y",
+        x0=row["X"] - 3,  # Adjust radius as needed
+        y0=row["Y"] - 3,
+        x1=row["X"] + 3,
+        y1=row["Y"] + 3,
+        line=dict(color="rgba(0,0,0,0.3)", width=1),  # Light transparent circle
+    )
+
+# Update text and layout
 fig.update_traces(textposition="top center")
 fig.update_layout(
     xaxis=dict(title="Dimension 1"),
