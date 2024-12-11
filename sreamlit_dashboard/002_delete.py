@@ -136,3 +136,8 @@ prompt = template.format(article_title=article.title, article_text=article.text)
 # Generate bulleted summary in French
 summary = chat([HumanMessage(content=prompt)])
 print(summary.content)
+
+
+# Display results
+print("Price-Based Features:")
+print(price_features.head())
