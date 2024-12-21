@@ -23,6 +23,92 @@ load_dotenv()
 
 # Set the OpenAI API key environment variable
 os.environ["OPENAI_API_KEY"] = os.getenv('OPENAI_API_KEY')
+class ContextualRetrievalStrategy(BaseRetrievalStrategy):
+    def retrieve(self, query, k=4, user_context=None):
+        print("Retrieving contextual information...")
+        context_prompt = PromptTemplate(
+            input_variables=["query", "context"],
+            template="Given the user context: {context}\nReformulate the query to best address the user's needs: {query}"
+        )
+        context_chain = context_prompt | self.llm
+        input_data = {"query": query, "context": user_context or "No specific context provided"}
+        contextualized_query = context_chain.invoke(input_data).content
+        print(f'Contextualized query: {contextualized_query}')
+
+        docs = self.db.similarity_search(contextualized_query, k=k * 2)
+
+        ranking_prompt = PromptTemplate(
+            input_variables=["query", "context", "doc"],
+            template="Given the query: '{query}' and user context: '{context}', rate the relevance of this document on a scale of 1-10:\nDocument: {doc}\nRelevance score:"
+        )
+        ranking_chain = ranking_prompt | self.llm.with_structured_output(RelevantScore)
+
+        ranked_docs = []
+        for doc in docs:
+            input_data = {"query": contextualized_query, "context": user_context or "No specific context provided",
+                          "doc": doc.page_content}
+            score = float(ranking_chain.invoke(input_data).score)
+            ranked_docs.append((doc, score))
+
+        ranked_docs.sort(key=lambda x: x[1], reverse=True)
+
+        return [doc for doc, _ in ranked_docs[:k]]
+
+
+# Define the main Adaptive RAG class
+class AdaptiveRAG:
+    def __init__(self, texts: List[str]):
+        self.classifier = QueryClassifier()
+        self.strategies = {
+            "Factual": FactualRetrievalStrategy(texts),
+            "Analytical": AnalyticalRetrievalStrategy(texts),
+            "Opinion": OpinionRetrievalStrategy(texts),
+            "Contextual": ContextualRetrievalStrategy(texts)
+        }
+        self.llm = ChatOpenAI(temperature=0, model_name="gpt-4o", max_tokens=4000)
+        prompt_template = """Use the following pieces of context to answer the question at the end. 
+        If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+        {context}
+
+        Question: {question}
+        Answer:"""
+        self.prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+        self.llm_chain = self.prompt | self.llm
+
+    def answer(self, query: str) -> str:
+        category = self.classifier.classify(query)
+        strategy = self.strategies[category]
+        docs = strategy.retrieve(query)
+        input_data = {"context": "\n".join([doc.page_content for doc in docs]), "question": query}
+        return self.llm_chain.invoke(input_data).content
+
+
+# Argument parsing functions
+def parse_args():
+    import argparse
+    parser = argparse.ArgumentParser(description="Run AdaptiveRAG system.")
+    parser.add_argument('--texts', nargs='+', help="Input texts for retrieval")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    texts = args.texts or [
+        "The Earth is the third planet from the Sun and the only astronomical object known to harbor life."]
+    rag_system = AdaptiveRAG(texts)
+
+    queries = [
+        "What is the distance between the Earth and the Sun?",
+        "How does the Earth's distance from the Sun affect its climate?",
+        "What are the different theories about the origin of life on Earth?",
+        "How does the Earth's position in the Solar System influence its habitability?"
+    ]
+
+    for query in queries:
+        print(f"Query: {query}")
+        result = rag_system.answer(query)
+        print(f"Answer: {result}")
 
 
 # Define all the required classes and strategies
@@ -159,89 +245,3 @@ class OpinionRetrievalStrategy(BaseRetrievalStrategy):
         return [all_docs[int(i)] for i in selected_indices if i.isdigit() and int(i) < len(all_docs)]
 
 
-class ContextualRetrievalStrategy(BaseRetrievalStrategy):
-    def retrieve(self, query, k=4, user_context=None):
-        print("Retrieving contextual information...")
-        context_prompt = PromptTemplate(
-            input_variables=["query", "context"],
-            template="Given the user context: {context}\nReformulate the query to best address the user's needs: {query}"
-        )
-        context_chain = context_prompt | self.llm
-        input_data = {"query": query, "context": user_context or "No specific context provided"}
-        contextualized_query = context_chain.invoke(input_data).content
-        print(f'Contextualized query: {contextualized_query}')
-
-        docs = self.db.similarity_search(contextualized_query, k=k * 2)
-
-        ranking_prompt = PromptTemplate(
-            input_variables=["query", "context", "doc"],
-            template="Given the query: '{query}' and user context: '{context}', rate the relevance of this document on a scale of 1-10:\nDocument: {doc}\nRelevance score:"
-        )
-        ranking_chain = ranking_prompt | self.llm.with_structured_output(RelevantScore)
-
-        ranked_docs = []
-        for doc in docs:
-            input_data = {"query": contextualized_query, "context": user_context or "No specific context provided",
-                          "doc": doc.page_content}
-            score = float(ranking_chain.invoke(input_data).score)
-            ranked_docs.append((doc, score))
-
-        ranked_docs.sort(key=lambda x: x[1], reverse=True)
-
-        return [doc for doc, _ in ranked_docs[:k]]
-
-
-# Define the main Adaptive RAG class
-class AdaptiveRAG:
-    def __init__(self, texts: List[str]):
-        self.classifier = QueryClassifier()
-        self.strategies = {
-            "Factual": FactualRetrievalStrategy(texts),
-            "Analytical": AnalyticalRetrievalStrategy(texts),
-            "Opinion": OpinionRetrievalStrategy(texts),
-            "Contextual": ContextualRetrievalStrategy(texts)
-        }
-        self.llm = ChatOpenAI(temperature=0, model_name="gpt-4o", max_tokens=4000)
-        prompt_template = """Use the following pieces of context to answer the question at the end. 
-        If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-        {context}
-
-        Question: {question}
-        Answer:"""
-        self.prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-        self.llm_chain = self.prompt | self.llm
-
-    def answer(self, query: str) -> str:
-        category = self.classifier.classify(query)
-        strategy = self.strategies[category]
-        docs = strategy.retrieve(query)
-        input_data = {"context": "\n".join([doc.page_content for doc in docs]), "question": query}
-        return self.llm_chain.invoke(input_data).content
-
-
-# Argument parsing functions
-def parse_args():
-    import argparse
-    parser = argparse.ArgumentParser(description="Run AdaptiveRAG system.")
-    parser.add_argument('--texts', nargs='+', help="Input texts for retrieval")
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    texts = args.texts or [
-        "The Earth is the third planet from the Sun and the only astronomical object known to harbor life."]
-    rag_system = AdaptiveRAG(texts)
-
-    queries = [
-        "What is the distance between the Earth and the Sun?",
-        "How does the Earth's distance from the Sun affect its climate?",
-        "What are the different theories about the origin of life on Earth?",
-        "How does the Earth's position in the Solar System influence its habitability?"
-    ]
-
-    for query in queries:
-        print(f"Query: {query}")
-        result = rag_system.answer(query)
-        print(f"Answer: {result}")
