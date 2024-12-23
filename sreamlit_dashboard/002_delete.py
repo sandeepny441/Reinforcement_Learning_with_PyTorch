@@ -161,3 +161,78 @@ reporting_task:
     Formatted as markdown without '```'
   agent: reporting_analyst
   output_file: report.md
+
+
+
+  import pandas as pd
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+from collections import Counter
+import re
+
+# Sample tweets
+tweets = [
+    "I love the new features on the app! Great job by the team.",
+    "This update is terrible, nothing works as expected.",
+    "The customer service was so helpful and polite. Kudos!",
+    "Why does the app crash every time I open it? Frustrating!",
+    "The new UI design is sleek and user-friendly.",
+    "Terrible experience with the latest version, please fix ASAP.",
+    "Thank you for resolving my issue so quickly. Impressed!",
+    "This app has gone from bad to worse. Really disappointed.",
+    "Loving the dark mode feature, much needed!",
+    "I can't believe how bad the performance has become. Fix it!"
+]
+
+# Create a DataFrame
+df = pd.DataFrame(tweets, columns=["Tweet"])
+
+# Text Cleaning
+def clean_text(text):
+    text = re.sub(r"http\S+", "", text)  # Remove URLs
+    text = re.sub(r"@\w+", "", text)    # Remove mentions
+    text = re.sub(r"#\w+", "", text)    # Remove hashtags
+    text = re.sub(r"[^\w\s]", "", text) # Remove punctuation
+    return text.lower()
+
+df["Cleaned_Tweet"] = df["Tweet"].apply(clean_text)
+
+# Sentiment Analysis
+def get_sentiment(text):
+    analysis = TextBlob(text)
+    return "Positive" if analysis.sentiment.polarity > 0 else "Negative" if analysis.sentiment.polarity < 0 else "Neutral"
+
+df["Sentiment"] = df["Cleaned_Tweet"].apply(get_sentiment)
+
+# Word Frequency
+all_words = " ".join(df["Cleaned_Tweet"])
+word_counts = Counter(all_words.split())
+common_words = word_counts.most_common(10)
+
+# WordCloud
+wordcloud = WordCloud(width=800, height=400, background_color="white").generate(all_words)
+
+# Plotting
+plt.figure(figsize=(14, 6))
+
+# WordCloud
+plt.subplot(1, 2, 1)
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis("off")
+plt.title("WordCloud of Tweets")
+
+# Sentiment Distribution
+plt.subplot(1, 2, 2)
+df["Sentiment"].value_counts().plot(kind="bar", color=["green", "red", "blue"])
+plt.title("Sentiment Distribution")
+plt.xlabel("Sentiment")
+plt.ylabel("Count")
+
+plt.tight_layout()
+plt.show()
+
+# Print insights
+print("Top 10 Common Words:", common_words)
+print("\nTweet Sentiments:")
+print(df[["Tweet", "Sentiment"]])
