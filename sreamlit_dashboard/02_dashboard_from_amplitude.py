@@ -39,3 +39,15 @@ from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+
+
+
+player_win=tk.Label(gui,text='')
+for i in ('row1','row2','row3'):
+    for j in range(3):
+        
+        vars()[i+str(j+1)]=tk.Button(vars()[i], text=f'       ',bd='1',command=partial(clicked,i+' '+str(j+1)))
+        vars()[i+str(j+1)].pack(side='left')
+
+
+gui.mainloop()
